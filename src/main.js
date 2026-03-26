@@ -14,6 +14,7 @@ import BirdMiniGame from './scenes/BirdMiniGame.js';
 import DreamMiniGame from './scenes/DreamMiniGame.js';
 import IdCardScene from './scenes/IdCardScene.js';
 import WardrobeScene from './scenes/WardrobeScene.js';
+import WordMiniGame from './scenes/WordMiniGame.js';
 
 const config = {
   type: Phaser.AUTO,
@@ -27,7 +28,7 @@ const config = {
     BootScene, IntroScene, GameScene, GameSelectScene,
     FishMiniGame, MouseMiniGame, MemoryMiniGame, YarnMiniGame,
     TetrisMiniGame, FlyMiniGame, MilkMiniGame, LootMiniGame, BirdMiniGame,
-    DreamMiniGame, IdCardScene, WardrobeScene,
+    DreamMiniGame, IdCardScene, WardrobeScene, WordMiniGame,
   ],
   scale: {
     mode: Phaser.Scale.FIT,

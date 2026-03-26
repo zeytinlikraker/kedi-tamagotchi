@@ -48,6 +48,7 @@ export default class GameScene extends Phaser.Scene {
 
     // Sekme arka plan takibi
     this._lastActiveTime = null;
+    this._resetting = false;
 
     // Kedi yaş aşaması
     this._birthDate   = (save && save.birthDate)   || new Date().toISOString();
@@ -146,6 +147,7 @@ export default class GameScene extends Phaser.Scene {
 
     // ── SEKME ARKA PLAN TAKİBİ ──────────────────────────────────
     document.addEventListener('visibilitychange', () => {
+      if (this._resetting) return;
       if (document.hidden) {
         this._lastActiveTime = Date.now();
         this._save();
@@ -179,6 +181,7 @@ export default class GameScene extends Phaser.Scene {
     // Sıfırla butonu
     document.getElementById('btn-reset').addEventListener('click', () => {
       if (confirm('Oyunu sifirlamak istediginize emin misiniz?')) {
+        this._resetting = true;
         localStorage.removeItem(SAVE_KEY);
         localStorage.removeItem('kedi_bgm_muted');
         localStorage.removeItem('kedi_sfx_muted');
@@ -1001,6 +1004,7 @@ export default class GameScene extends Phaser.Scene {
 
   // ── KAYIT / YÜKLEME ─────────────────────────────────────────────
   _save() {
+    if (this._resetting) return;
     const data = {
       stats: this._stats,
       sleeping: this._sleeping,

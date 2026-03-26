@@ -121,6 +121,19 @@ const GAMES = [
     controls: 'FARE TIKLAMA',
     time: '20 saniye',
   },
+  {
+    key: 'WordMiniGame',
+    label: 'Kelime Bulmaca',
+    icon: '📝',
+    desc: [
+      'Karisik harflerden kelime olustur.',
+      'Ipucularina dikkat et!',
+      'Her dogru kelime = 2 puan.',
+      '5 kelimeyi de bilirsen bonus!',
+    ],
+    controls: 'FARE TIKLAMA',
+    time: '45 saniye',
+  },
 ];
 
 export default class GameSelectScene extends Phaser.Scene {
