@@ -4,7 +4,7 @@ Browser uzerinde calisan pixel art kedi bakim oyunu!
 Phaser.js 3 ile yapilmis, tamamen programatik pixel art — harici dosya gerekmez.
 
 ## 🎮 Oyna
-> Linki GitHub Pages deploy sonrasi guncelleyin.
+https://zeytinlikraker.github.io/kedi-tamagotchi/
 
 ## ✨ Ozellikler
 

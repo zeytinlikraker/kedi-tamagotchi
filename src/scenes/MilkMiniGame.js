@@ -84,9 +84,11 @@ export default class MilkMiniGame extends Phaser.Scene {
       fontFamily: '"Press Start 2P"', fontSize: '8px', fill: '#ffffff',
     }).setOrigin(0.5);
 
-    // Tıklama kontrol
+    // Tıklama / dokunma kontrol
     this.input.on('pointerdown', () => { if (this._roundActive && !this._filling) this._startFill(); });
     this.input.on('pointerup',   () => { if (this._filling) this._stopFill(); });
+    this.input.on('pointerout',  () => { if (this._filling) this._stopFill(); });
+    this.input.on('gameout',     () => { if (this._filling) this._stopFill(); });
 
     // Space kontrol
     this.input.keyboard.on('keydown-SPACE', () => { if (this._roundActive && !this._filling) this._startFill(); });
