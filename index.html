@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kedi Tamagotchi</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="game-wrapper">
+    <!-- Kedi adı — oyun ekranının üstünde -->
+    <div id="cat-name-display"></div>
+
+    <!-- Custom isim input (IntroScene için, normalde gizli) -->
+    <input type="text" id="custom-name-input" maxlength="12" placeholder="Isim yaz..." />
+
+    <!-- Phaser canvas buraya mount edilecek -->
+    <div id="game-container"></div>
+
+    <!-- Stat barları overlay -->
+    <div id="stats-overlay">
+      <div class="stat-row">
+        <span class="stat-icon">🍖</span>
+        <div class="stat-bar-bg">
+          <div class="stat-bar" id="bar-hunger" style="background:#f4a261;"></div>
+        </div>
+        <span class="stat-label" id="lbl-hunger">100</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-icon">💖</span>
+        <div class="stat-bar-bg">
+          <div class="stat-bar" id="bar-happiness" style="background:#e63946;"></div>
+        </div>
+        <span class="stat-label" id="lbl-happiness">100</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-icon">⚡</span>
+        <div class="stat-bar-bg">
+          <div class="stat-bar" id="bar-energy" style="background:#2a9d8f;"></div>
+        </div>
+        <span class="stat-label" id="lbl-energy">100</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-icon">🛁</span>
+        <div class="stat-bar-bg">
+          <div class="stat-bar" id="bar-cleanliness" style="background:#457b9d;"></div>
+        </div>
+        <span class="stat-label" id="lbl-cleanliness">100</span>
+      </div>
+      <div class="stat-row">
+        <span class="stat-icon">🎮</span>
+        <div class="stat-bar-bg">
+          <div class="stat-bar" id="bar-fun" style="background:#9b59b6;"></div>
+        </div>
+        <span class="stat-label" id="lbl-fun">100</span>
+      </div>
+    </div>
+
+    <!-- Aksiyon butonları -->
+    <div id="action-buttons">
+      <button class="action-btn" id="btn-feed"     title="Besle">🍖</button>
+      <button class="action-btn" id="btn-pet"      title="Sev">💖</button>
+      <button class="action-btn" id="btn-play"     title="Oyun Oyna">🎮</button>
+      <button class="action-btn" id="btn-sleep"    title="Uyut">😴</button>
+      <button class="action-btn" id="btn-bath"     title="Banyo">🛁</button>
+      <button class="action-btn" id="btn-wake"     title="Uyandır">☀️</button>
+    </div>
+
+    <!-- Ses kontrol + sıfırla butonları -->
+    <div id="mute-row">
+      <button id="btn-mute-bgm" title="Muzik Ac/Kapat">🎵</button>
+      <button id="btn-mute-sfx" title="Sesler Ac/Kapat">🔊</button>
+      <button id="btn-wardrobe" title="Dolap">👗</button>
+      <button id="btn-reset" title="Yeni Oyun">🔄</button>
+    </div>
+
+    <!-- Durum mesajı -->
+    <div id="status-message"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+  <script type="module" src="src/main.js"></script>
+</body>
+</html>
