@@ -48,6 +48,19 @@ export default class SoundManager {
     this._sfxGain = this._ctx.createGain();
     this._sfxGain.gain.value = this._sfxMuted ? 0 : 1;
     this._sfxGain.connect(this._masterGain);
+
+    // Mobil için: ilk dokunma/tıklamada AudioContext resume
+    const resumeOnTouch = () => {
+      if (this._ctx && this._ctx.state === 'suspended') {
+        this._ctx.resume();
+      }
+      document.removeEventListener('touchstart', resumeOnTouch);
+      document.removeEventListener('touchend', resumeOnTouch);
+      document.removeEventListener('click', resumeOnTouch);
+    };
+    document.addEventListener('touchstart', resumeOnTouch);
+    document.addEventListener('touchend', resumeOnTouch);
+    document.addEventListener('click', resumeOnTouch);
   }
 
   /** Resume context (autoplay policy) */
@@ -88,6 +101,7 @@ export default class SoundManager {
   // ── YARDIMCI: OSCİLATÖR ÇAL ────────────────────────────────────
   _playTone(freq, duration, type = 'square', volume = 0.15, detune = 0) {
     if (!this._ctx) return;
+    this.resume();
     const osc = this._ctx.createOscillator();
     const gain = this._ctx.createGain();
     osc.type = type;
@@ -103,6 +117,7 @@ export default class SoundManager {
 
   _playNoise(duration, volume = 0.08) {
     if (!this._ctx) return;
+    this.resume();
     const bufferSize = this._ctx.sampleRate * duration;
     const buffer = this._ctx.createBuffer(1, bufferSize, this._ctx.sampleRate);
     const data = buffer.getChannelData(0);
@@ -171,6 +186,7 @@ export default class SoundManager {
 
   _playGameBGMLoop() {
     if (!this._gameBgmPlaying || !this._ctx) return;
+    this.resume();
 
     const BPM = 140;
     const beatSec = 60 / BPM;
@@ -294,6 +310,7 @@ export default class SoundManager {
 
   _playBGMLoop() {
     if (!this._bgmPlaying || !this._ctx) return;
+    this.resume();
 
     // ── TEMPO ──
     const BPM = 85;

@@ -213,7 +213,10 @@ export default class GameScene extends Phaser.Scene {
   }
 
   _ensureSound() {
-    if (this._soundInited) return;
+    if (this._soundInited) {
+      soundManager.resume();
+      return;
+    }
     this._soundInited = true;
     soundManager.init();
     soundManager.resume();
