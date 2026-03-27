@@ -1,4 +1,4 @@
-// ── RENK PALETLERİ (8 adet) ────────────────────────────────────────
+﻿// ── RENK PALETLERİ (8 adet) ────────────────────────────────────────
 export const COLOR_PALETTES = {
   orange:  { body: 0xf4a261, dark: 0xc4622a, stripe: 0xc4622a, nose: 0xe63946, label: 'Turuncu' },
   gray:    { body: 0xb0b0b0, dark: 0x707070, stripe: 0x606060, nose: 0xd47070, label: 'Gri' },
