@@ -153,6 +153,23 @@ export default class GameScene extends Phaser.Scene {
         this._save();
       } else {
         this._applyOfflineDecay();
+        // Phaser input sistemini resetle (arkadan dönünce input donması)
+        setTimeout(() => {
+          if (this.input) {
+            this.input.enabled = false;
+            this.input.enabled = true;
+          }
+        }, 100);
+      }
+    });
+
+    // Phaser focus event'i ile de resetle
+    this.game.events.on('focus', () => {
+      if (this.input) {
+        this.input.enabled = false;
+        this.time.delayedCall(50, () => {
+          if (this.input) this.input.enabled = true;
+        });
       }
     });
 
