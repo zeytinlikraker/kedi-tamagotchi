@@ -46,6 +46,16 @@ export default class GameScene extends Phaser.Scene {
     this._toiletTimer = null;
     this._catInToilet = false;
 
+    // Hastalık sistemi
+    this._isSick = (save && save.isSick) || false;
+    this._sickTimer = 0;       // kirli tuvalet + düşük temizlik kaç saniyedir
+    this._immunity = (save && save.immunity) || 0; // ilaç sonrası bağışıklık süresi (sn)
+
+    // Ziyaretçi kedi
+    this._visitorCat = null;
+    this._visitorTimer = 0;
+    this._lastVisitorTime = 0;
+
     // Sekme arka plan takibi
     this._lastActiveTime = null;
     this._resetting = false;
@@ -214,8 +224,36 @@ export default class GameScene extends Phaser.Scene {
       this._openWardrobe();
     });
 
+    // İlaç butonu
+    document.getElementById('btn-medicine').addEventListener('click', () => {
+      this._ensureSound();
+      soundManager.playClick();
+      this._giveMedicine();
+    });
+
     // Kayıtlı aksesuarları uygula
     this._applyLoadedAccessories();
+
+    // Başlangıçta hasta ise state uygula
+    if (this._isSick) {
+      this.time.delayedCall(500, () => this._cat.setState('sick'));
+    }
+
+    // Hastalık kontrolü (30 saniyede bir)
+    this.time.addEvent({
+      delay: 30000,
+      callback: this._checkSickness,
+      callbackScope: this,
+      loop: true,
+    });
+
+    // Ziyaretçi kedi kontrolü (2 dakikada bir)
+    this.time.addEvent({
+      delay: 120000,
+      callback: this._checkVisitorCat,
+      callbackScope: this,
+      loop: true,
+    });
 
     // İlk kullanıcı etkileşiminde ses başlat
     this.input.on('pointerdown', () => this._ensureSound(), this);
@@ -259,6 +297,16 @@ export default class GameScene extends Phaser.Scene {
       this._stats.happiness = Math.max(0, this._stats.happiness - DECAY.happiness * 0.5);
     }
 
+    // Hasta kedi — statlar %50 daha hızlı azalır
+    if (this._isSick) {
+      for (const key of Object.keys(DECAY)) {
+        this._stats[key] = Math.max(0, this._stats[key] - DECAY[key] * 0.5);
+      }
+    }
+
+    // Bağışıklık sayacı
+    if (this._immunity > 0) this._immunity--;
+
     this._ui.update(this._stats);
     this._evaluateCatState();
     this._checkDeath();
@@ -285,6 +333,11 @@ export default class GameScene extends Phaser.Scene {
     if (this._cat.isWalking) return;
     // Happy animasyonu koruma süresi — 2 sn boyunca override etme
     if (this._happyUntil && Date.now() < this._happyUntil) return;
+    // Hasta kedi — sick state korunur
+    if (this._isSick) {
+      if (this._cat.state !== 'sick') this._cat.setState('sick');
+      return;
+    }
 
     const s = this._stats;
 
@@ -324,7 +377,7 @@ export default class GameScene extends Phaser.Scene {
       soundManager.playGameOver();
       this._ui.showMessage('Kedi cok uzgun... Lutfen ilgilen!', 5000);
       // Tüm butonları devre dışı bırak (wake hariç)
-      ['btn-feed','btn-pet','btn-play','btn-sleep','btn-bath','btn-wake'].forEach(id => {
+    ['btn-feed','btn-pet','btn-play','btn-sleep','btn-bath','btn-wake','btn-medicine'].forEach(id => {
         this._ui.setButtonEnabled(id, false);
       });
       // 5 saniye sonra canlandır (mercy mechanic)
@@ -637,8 +690,15 @@ export default class GameScene extends Phaser.Scene {
       catSprite: this._cat,
       currentSlots: this._cat.getAccessoryKeys(),
       ageStage: this._currentAgeStage,
-      onClose: (slots) => {
-        // Kapanınca kaydet
+      currentColor: this._catColor,
+      onColorChange: (newColor) => {
+        this._catColor = newColor;
+        // Üst barda renk label güncellenemez ama save'e yazılır
+      },
+      onClose: (slots, newColor) => {
+        if (newColor && newColor !== this._catColor) {
+          this._catColor = newColor;
+        }
         this._save();
       },
     });
@@ -663,6 +723,171 @@ export default class GameScene extends Phaser.Scene {
     } catch (e) {
       console.warn('Aksesuar yukleme hatasi:', e);
     }
+  }
+
+  // ── HASTALIK SİSTEMİ ────────────────────────────────────────────
+  _checkSickness() {
+    if (this._dead || this._sleeping || this._isSick || this._immunity > 0) return;
+
+    // Kirli tuvalet (>=4) + düşük temizlik (<25) → hastalanma sayacı artar
+    if (this._litterDirt >= 4 && this._stats.cleanliness < 25) {
+      this._sickTimer += 30; // 30 sn ekle (her 30 sn'de bir çağrılıyor)
+    } else {
+      this._sickTimer = Math.max(0, this._sickTimer - 10);
+    }
+
+    // 3 dakika (180 sn) kirli ortamda kaldıysa hasta ol
+    if (this._sickTimer >= 180) {
+      this._becomeSick();
+    }
+  }
+
+  _becomeSick() {
+    this._isSick = true;
+    this._sickTimer = 0;
+    this._cat.setState('sick');
+    this._ui.showMessage('Kedin hasta! Ilac ver! 🤧', 3000);
+    soundManager.playWarning();
+    // İlaç butonunu vurgula
+    const btn = document.getElementById('btn-medicine');
+    if (btn) {
+      btn.style.borderColor = '#ff0000';
+      btn.style.animation = 'pulse 0.5s infinite alternate';
+    }
+    this._save();
+  }
+
+  _giveMedicine() {
+    if (!this._isSick) {
+      this._ui.showMessage('Kedin hasta degil!', 1500);
+      return;
+    }
+    // İyileşme animasyonu
+    this._lockAction(2000);
+    this._ui.showMessage('Kedi ilac iciyor... 💊', 2000);
+
+    // Küçük parlama efekti
+    this.time.delayedCall(500, () => {
+      const flash = this.add.rectangle(this._cat.x, this._cat.y - 50, 60, 60, 0x2a9d8f, 0.5)
+        .setDepth(500);
+      this.tweens.add({
+        targets: flash, scale: 3, alpha: 0, duration: 600,
+        onComplete: () => flash.destroy(),
+      });
+
+      this._isSick = false;
+      this._sickTimer = 0;
+      this._immunity = 600; // 10 dakika bağışıklık (600 sn)
+      this._applyGain({ hunger: 20, happiness: 20, energy: 15, cleanliness: 20 });
+      this._cat.setState('happy');
+      this._happyUntil = Date.now() + 2000;
+      this._ui.showMessage('Kedin iyilesti! 🎉', 2500);
+      soundManager.playScore();
+
+      // İlaç butonu normal haline dönsün
+      const btn = document.getElementById('btn-medicine');
+      if (btn) {
+        btn.style.borderColor = '';
+        btn.style.animation = '';
+      }
+      this._save();
+    });
+  }
+
+  // ── ZİYARETÇİ KEDİ ───────────────────────────────────────────────
+  _checkVisitorCat() {
+    if (this._dead || this._sleeping || this._visitorCat) return;
+    if (Date.now() - this._lastVisitorTime < 5 * 60 * 1000) return; // min 5 dk arayla
+
+    // Tüm statlar > 70 olunca %30 ihtimalle ziyaretçi kedi gelir
+    const s = this._stats;
+    if (s.hunger > 70 && s.happiness > 70 && s.energy > 50 && s.cleanliness > 50) {
+      if (Phaser.Math.Between(0, 9) < 3) {
+        this._spawnVisitorCat();
+      }
+    }
+  }
+
+  _spawnVisitorCat() {
+    this._lastVisitorTime = Date.now();
+
+    // Oyuncunun kedisinden farklı rastgele renk seç
+    const { COLOR_PALETTES } = window._colorPalettes || {};
+    const allColors = ['orange','gray','black','white','brown','tabby','pink','blue'];
+    const availColors = allColors.filter(c => c !== this._catColor);
+    const visitorColor = availColors[Phaser.Math.Between(0, availColors.length - 1)];
+
+    // Ziyaretçi kedi sprite — sol kapıdan giriş
+    const startX = -50;
+    const targetX = Phaser.Math.Between(120, 320);
+    const catY = Phaser.Math.Between(260, 300);
+
+    const visitor = this.add.sprite(startX, catY, 'cat_sheet', 0)
+      .setScale(2.5)
+      .setOrigin(0.5, 1)
+      .setDepth(catY)
+      .setTint(0xffccaa) // hafif tint ile farklı kedi hissi
+      .setInteractive({ useHandCursor: true });
+
+    this._visitorCat = visitor;
+
+    // Animasyon
+    if (!this.anims.exists('visitor_idle')) {
+      this.anims.create({
+        key: 'visitor_idle',
+        frames: [{ key: 'cat_sheet', frame: 0 }, { key: 'cat_sheet', frame: 1 }],
+        frameRate: 2, repeat: -1,
+      });
+    }
+    visitor.play('visitor_idle');
+
+    this._ui.showMessage('Misafir kedi geldi! Merhaba de! 🐱', 2500);
+
+    // Odaya yürü
+    this.tweens.add({
+      targets: visitor,
+      x: targetX,
+      duration: Math.abs(targetX - startX) * 8,
+      ease: 'Linear',
+    });
+
+    // Tıklama — sev
+    visitor.on('pointerdown', () => {
+      if (!visitor.active) return;
+      soundManager.playPurr();
+      this._applyGain({ happiness: 15 });
+      this._ui.showMessage('Misafir kedi seni sevdi! 💕', 1500);
+
+      // Kalp efekti
+      for (let i = 0; i < 4; i++) {
+        const heart = this.add.image(
+          visitor.x + Phaser.Math.Between(-20, 20),
+          visitor.y - 60,
+          'heart'
+        ).setScale(2).setDepth(500);
+        this.tweens.add({
+          targets: heart, y: heart.y - 40, alpha: 0, duration: 700,
+          onComplete: () => heart.destroy(),
+        });
+      }
+    });
+
+    // 12-15 sn sonra gider
+    const stayTime = Phaser.Math.Between(12000, 15000);
+    this.time.delayedCall(stayTime, () => {
+      if (!visitor.active) return;
+      visitor.setFlipX(true);
+      this.tweens.add({
+        targets: visitor,
+        x: -60,
+        duration: 2000,
+        ease: 'Linear',
+        onComplete: () => {
+          visitor.destroy();
+          this._visitorCat = null;
+        },
+      });
+    });
   }
 
   // ── BÜYÜME SİSTEMİ ──────────────────────────────────────────────
@@ -1039,6 +1264,9 @@ export default class GameScene extends Phaser.Scene {
       totalBaths: this._totalBaths,
       totalCleans: this._totalCleans,
       accessories: this._cat ? this._cat.getAccessoryKeys() : { head: null, neck: null, eyes: null },
+      isSick: this._isSick,
+      sickTimer: this._sickTimer,
+      immunity: this._immunity,
     };
     localStorage.setItem(SAVE_KEY, JSON.stringify(data));
   }

@@ -60,8 +60,7 @@ export default class BootScene extends Phaser.Scene {
     this._generateBirdSprites();
     this._generateFeatherSprite();
     this._generateTetrisBlockSprite();
-    this._generateAccessorySprites();
-
+    this._generateAccessorySprites();`r`n    this._generateMedicineSprite();`r`n    this._generateSneezeBubbleSprite();`r`n
     // Save kontrol — varsa direkt oyuna, yoksa giriş ekranına
     const SAVE_KEY = 'kedi_tamagotchi_save';
     const raw = localStorage.getItem(SAVE_KEY);
@@ -782,6 +781,56 @@ export default class BootScene extends Phaser.Scene {
     gfx.destroy();
   }
 
+  // ── İLAÇ ────────────────────────────────────────────────────────
+  _generateMedicineSprite() {
+    const gfx = this.make.graphics({ x: 0, y: 0, add: false });
+    // Hap şişesi
+    gfx.fillStyle(0xffffff, 1);
+    gfx.fillRect(4, 4, 8, 10);
+    gfx.fillStyle(0xdddddd, 1);
+    gfx.fillRect(4, 4, 8, 1); gfx.fillRect(4, 13, 8, 1);
+    gfx.fillRect(4, 4, 1, 10); gfx.fillRect(11, 4, 1, 10);
+    // Kapak
+    gfx.fillStyle(0xe63946, 1);
+    gfx.fillRect(3, 1, 10, 4);
+    gfx.fillStyle(0xc4222a, 1);
+    gfx.fillRect(3, 1, 10, 1);
+    // Hap içi
+    gfx.fillStyle(0xff6b6b, 1);
+    gfx.fillCircle(8, 8, 2);
+    gfx.fillCircle(8, 12, 1);
+    // Artı işareti
+    gfx.fillStyle(0xe63946, 1);
+    gfx.fillRect(7, 6, 2, 5);
+    gfx.fillRect(5, 8, 6, 1);
+    gfx.generateTexture('medicine', 16, 16);
+    gfx.destroy();
+  }
+
+  // ── HAPŞIRMA BALONU ─────────────────────────────────────────────
+  _generateSneezeBubbleSprite() {
+    const gfx = this.make.graphics({ x: 0, y: 0, add: false });
+    // Balonun gövdesi
+    gfx.fillStyle(0xffffff, 0.9);
+    gfx.fillEllipse(14, 10, 26, 18);
+    // Baloncuk kuyruğu
+    gfx.fillStyle(0xffffff, 0.9);
+    gfx.fillTriangle(6, 16, 2, 22, 10, 18);
+    // Kenarlık
+    gfx.lineStyle(2, 0xdddddd, 0.8);
+    gfx.strokeEllipse(14, 10, 26, 18);
+    // "AH" yazısı yerine 🤧 — metin olarak çizeceğiz, sprite sadece baloncuk
+    gfx.fillStyle(0x888888, 1);
+    gfx.fillRect(8, 7, 2, 6);   // ünlem
+    gfx.fillRect(12, 7, 4, 2);  // A
+    gfx.fillRect(12, 9, 4, 1);
+    gfx.fillRect(12, 10, 4, 2);
+    gfx.fillRect(17, 7, 2, 6);  // H
+    gfx.fillRect(18, 9, 3, 1);
+    gfx.generateTexture('sneeze_bubble', 28, 24);
+    gfx.destroy();
+  }
+
   // ── SİNEK ──────────────────────────────────────────────────────
   _generateFlySprite() {
     const gfx = this.make.graphics({ x: 0, y: 0, add: false });
@@ -1078,7 +1127,7 @@ export function generateCatSheet(scene, colorKey, ageStage = 'adult') {
 
   const FRAME_W = 32;
   const FRAME_H = 32;
-  const FRAMES  = 14;
+  const FRAMES  = 16;
   const gfx = scene.make.graphics({ x: 0, y: 0, add: false });
 
   const drawFn = ageStage === 'kitten' ? drawCatFrameKitten :
@@ -1302,6 +1351,25 @@ function drawCatFrame(gfx, ox, oy, frame, palette) {
     rect(6,  10, 2, 3, 0x90e0ef);
     rect(24, 8,  2, 3, 0x90e0ef);
     rect(15, 6,  2, 3, 0x90e0ef);
+  }
+
+  // Hasta efekti (frame 14-15)
+  if (frame === 14 || frame === 15) {
+    const tOff = (frame === 15) ? 1 : 0; // titreme efekti
+    // Kırmızı burun (ateş)
+    rect(13 + tOff, headY - oy + 7, 5, 3, 0xff4444);
+    // Sarı-yeşil hasta gözler (normal gözlerin üzerine)
+    rect(11 + tOff, headY - oy + 3, 4, 4, 0x8b8b00);
+    rect(17 + tOff, headY - oy + 3, 4, 4, 0x8b8b00);
+    px(12 + tOff, headY - oy + 3, 0xffff00);
+    px(18 + tOff, headY - oy + 3, 0xffff00);
+    // Üzgün ağız
+    px(13 + tOff, headY - oy + 10, MOUTH);
+    px(14 + tOff, headY - oy + 9, MOUTH);
+    px(15 + tOff, headY - oy + 9, MOUTH);
+    px(16 + tOff, headY - oy + 10, MOUTH);
+    // Ter damlası (sağ üst)
+    rect(22, headY - oy, 2, 3, 0x90e0ef);
   }
 }
 

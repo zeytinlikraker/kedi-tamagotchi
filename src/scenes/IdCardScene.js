@@ -79,7 +79,7 @@ export default class IdCardScene extends Phaser.Scene {
     const stageLabel = stageLabels[this._ageStage] || 'Yetiskin';
 
     const lines = [
-      { label: 'Isim:', value: this._catName },
+      { label: 'Isim:', value: this._catName, editable: true },
       { label: 'Renk:', value: colorLabel },
       { label: 'Asama:', value: stageLabel },
       { label: 'Dogum:', value: dateStr },
@@ -90,9 +90,32 @@ export default class IdCardScene extends Phaser.Scene {
       this.add.text(infoX, infoStartY + i * lineH, line.label, {
         fontFamily: '"Press Start 2P"', fontSize: '6px', fill: '#888',
       });
-      this.add.text(infoX + 60, infoStartY + i * lineH, line.value, {
+      const valTxt = this.add.text(infoX + 60, infoStartY + i * lineH, line.value, {
         fontFamily: '"Press Start 2P"', fontSize: '6px', fill: '#ffffff',
       });
+      // İsim satırına düzenle butonu ekle
+      if (line.editable) {
+        const editBtn = this.add.text(infoX + 60 + valTxt.width + 8, infoStartY + i * lineH, '✏️', {
+          fontSize: '10px',
+        }).setInteractive({ useHandCursor: true });
+        editBtn.on('pointerdown', () => {
+          const newName = prompt('Yeni isim gir:', this._catName);
+          if (newName && newName.trim().length > 0 && newName.trim().length <= 12) {
+            this._catName = newName.trim();
+            valTxt.setText(this._catName);
+            document.getElementById('cat-name-display').textContent = this._catName;
+            // GameScene'e bildir (localStorage üzerinden)
+            try {
+              const raw = localStorage.getItem('kedi_tamagotchi_save');
+              if (raw) {
+                const data = JSON.parse(raw);
+                data.catName = this._catName;
+                localStorage.setItem('kedi_tamagotchi_save', JSON.stringify(data));
+              }
+            } catch (e) {}
+          }
+        });
+      }
     });
 
     // İstatistikler ayırıcı

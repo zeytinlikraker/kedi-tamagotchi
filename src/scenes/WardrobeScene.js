@@ -1,4 +1,5 @@
 import { soundManager } from '../audio/SoundManager.js';
+import { COLOR_PALETTES, generateCatSheet } from './BootScene.js';
 
 /**
  * WardrobeScene — Kedi Dolabı (Aksesuar Seçme)
@@ -22,10 +23,13 @@ export default class WardrobeScene extends Phaser.Scene {
   constructor() { super({ key: 'WardrobeScene' }); }
 
   init(data) {
-    this._catSprite = data.catSprite;     // CatSprite referansı
+    this._catSprite = data.catSprite;
     this._currentSlots = data.currentSlots || { head: null, neck: null, eyes: null };
     this._ageStage = data.ageStage || 'adult';
+    this._currentColor = data.currentColor || 'orange';
     this._onClose = data.onClose || (() => {});
+    this._onColorChange = data.onColorChange || (() => {});
+    this._activeTab = 'accessories'; // 'accessories' veya 'color'
   }
 
   create() {
@@ -46,8 +50,24 @@ export default class WardrobeScene extends Phaser.Scene {
       fontFamily: '"Press Start 2P"', fontSize: '10px', fill: '#f4a261',
     }).setOrigin(0.5);
 
+    // Sekme butonları
+    this._tabAccessoryBg = this.add.rectangle(CX - 55, CY - 112, 100, 20, 0x2a9d8f)
+      .setStrokeStyle(1, 0x457b9d).setInteractive({ useHandCursor: true });
+    this._tabAccessoryTxt = this.add.text(CX - 55, CY - 112, 'AKSESUAR', {
+      fontFamily: '"Press Start 2P"', fontSize: '5px', fill: '#ffffff',
+    }).setOrigin(0.5);
+
+    this._tabColorBg = this.add.rectangle(CX + 55, CY - 112, 100, 20, 0x1e1e3a)
+      .setStrokeStyle(1, 0x457b9d).setInteractive({ useHandCursor: true });
+    this._tabColorTxt = this.add.text(CX + 55, CY - 112, 'RENK', {
+      fontFamily: '"Press Start 2P"', fontSize: '5px', fill: '#888',
+    }).setOrigin(0.5);
+
+    this._tabAccessoryBg.on('pointerdown', () => this._switchTab('accessories'));
+    this._tabColorBg.on('pointerdown', () => this._switchTab('color'));
+
     // Ayırıcı
-    this.add.rectangle(CX, CY - 115, 360, 1, 0x457b9d);
+    this.add.rectangle(CX, CY - 100, 360, 1, 0x457b9d);
 
     // Kedi önizleme (sol tarafta)
     this.add.rectangle(CX - 120, CY - 20, 90, 110, 0x1e1e3a)
@@ -218,9 +238,94 @@ export default class WardrobeScene extends Phaser.Scene {
     this._updatePreview();
   }
 
+  _switchTab(tab) {
+    this._activeTab = tab;
+    soundManager.playClick();
+
+    if (tab === 'accessories') {
+      this._tabAccessoryBg.setFillStyle(0x2a9d8f);
+      this._tabAccessoryTxt.setStyle({ fill: '#ffffff' });
+      this._tabColorBg.setFillStyle(0x1e1e3a);
+      this._tabColorTxt.setStyle({ fill: '#888' });
+      this._listGroup.setVisible(true);
+      if (this._colorGroup) this._colorGroup.setVisible(false);
+    } else {
+      this._tabAccessoryBg.setFillStyle(0x1e1e3a);
+      this._tabAccessoryTxt.setStyle({ fill: '#888' });
+      this._tabColorBg.setFillStyle(0x2a9d8f);
+      this._tabColorTxt.setStyle({ fill: '#ffffff' });
+      this._listGroup.setVisible(false);
+      if (!this._colorGroup) this._createColorPanel();
+      else this._colorGroup.setVisible(true);
+    }
+  }
+
+  _createColorPanel() {
+    const W = 480, H = 360;
+    const CX = W / 2, CY = H / 2;
+    this._colorGroup = this.add.group();
+
+    const colors = Object.entries(COLOR_PALETTES);
+    const swatchSize = 28, gap = 10;
+    const perRow = 4;
+    const totalW = perRow * swatchSize + (perRow - 1) * gap;
+    const startX = CX + 10 - totalW / 2 + swatchSize / 2;
+    const startY = CY - 70;
+
+    // Renk seç başlığı
+    this._colorGroup.add(
+      this.add.text(CX + 10, CY - 95, 'RENK SEC', {
+        fontFamily: '"Press Start 2P"', fontSize: '6px', fill: '#f4a261',
+      }).setOrigin(0.5)
+    );
+
+    colors.forEach(([key, pal], i) => {
+      const col = i % perRow;
+      const row = Math.floor(i / perRow);
+      const sx = startX + col * (swatchSize + gap);
+      const sy = startY + row * (swatchSize + gap);
+
+      const isActive = key === this._currentColor;
+      const border = this.add.rectangle(sx, sy, swatchSize + 6, swatchSize + 6,
+        isActive ? 0xf4a261 : 0x444466)
+        .setStrokeStyle(2, isActive ? 0xffd166 : 0x444466);
+      this._colorGroup.add(border);
+
+      const swatch = this.add.rectangle(sx, sy, swatchSize, swatchSize, pal.body)
+        .setInteractive({ useHandCursor: true });
+      this._colorGroup.add(swatch);
+
+      swatch.on('pointerover', () => { if (key !== this._currentColor) swatch.setScale(1.2); });
+      swatch.on('pointerout',  () => swatch.setScale(1));
+      swatch.on('pointerdown', () => {
+        soundManager.playClick();
+        this._currentColor = key;
+        // Seçili vurgu güncelle
+        this._colorGroup.getChildren().forEach(c => {
+          if (c.type === 'Rectangle' && c.width === swatchSize + 6) {
+            c.setFillStyle(0x444466).setStrokeStyle(2, 0x444466);
+          }
+        });
+        border.setFillStyle(0xf4a261).setStrokeStyle(2, 0xffd166);
+        // Sprite sheet yeniden üret
+        generateCatSheet(this, key, this._ageStage);
+        this._catSprite.sprite.setTexture('cat_sheet', 0);
+        this._catSprite._redefineAnimations();
+        const currentState = this._catSprite.state;
+        this._catSprite.state = '';
+        this._catSprite.setState(currentState);
+        // Önizleme güncelle
+        if (this._previewSprite && this._previewSprite.active) {
+          this._previewSprite.setTexture('cat_sheet', 0);
+        }
+        this._onColorChange(key);
+      });
+    });
+  }
+
   _close() {
     soundManager.playClick();
-    this._onClose(this._currentSlots);
+    this._onClose(this._currentSlots, this._currentColor);
     this.scene.stop('WardrobeScene');
   }
 }

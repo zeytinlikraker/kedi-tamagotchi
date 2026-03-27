@@ -73,6 +73,9 @@ export default class CatSprite {
     if (!anims.exists('cat_bored')) {
       anims.create({ key: 'cat_bored',    frames: f([12, 13]), frameRate: 0.8, repeat: -1 });
     }
+    if (!anims.exists('cat_sick')) {
+      anims.create({ key: 'cat_sick',     frames: f([14, 15]), frameRate: 1.5, repeat: -1 });
+    }
   }
 
   // ── STATE GEÇİŞLERİ ─────────────────────────────────────────────
@@ -92,6 +95,7 @@ export default class CatSprite {
       case 'dead':     this._startDead();    break;
       case 'tired':    this._startTired();   break;
       case 'bored':    this._startBored();   break;
+      case 'sick':     this._startSick();    break;
     }
   }
 
@@ -184,6 +188,39 @@ export default class CatSprite {
       repeat: -1,
       ease: 'Sine.easeInOut',
     });
+  }
+
+  _startSick() {
+    this.sprite.play('cat_sick');
+    // Yavaş titreşim — hasta his
+    this._floatTween = this.scene.tweens.add({
+      targets: this.sprite,
+      y: this.sprite.y - 2,
+      duration: 2500,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+    // Periyodik hapşırma efekti
+    this._spawnSneeze();
+  }
+
+  _spawnSneeze() {
+    const loop = () => {
+      if (this.state !== 'sick' || !this.sprite.active) return;
+      const sneeze = this.scene.add.text(
+        this.sprite.x + 20, this.sprite.y - 90, '🤧', { fontSize: '18px' }
+      ).setDepth(500);
+      this.scene.tweens.add({
+        targets: sneeze,
+        y: sneeze.y - 25,
+        alpha: 0,
+        duration: 1200,
+        onComplete: () => sneeze.destroy(),
+      });
+      this.scene.time.delayedCall(3000, loop);
+    };
+    this.scene.time.delayedCall(1000, loop);
   }
 
   _startSleep() {
@@ -384,11 +421,12 @@ export default class CatSprite {
     anims.create({ key: 'cat_dead',     frames: f([9]),      frameRate: 1,   repeat: -1 });
     anims.create({ key: 'cat_tired',    frames: f([10, 11]), frameRate: 1,   repeat: -1 });
     anims.create({ key: 'cat_bored',    frames: f([12, 13]), frameRate: 0.8, repeat: -1 });
+    anims.create({ key: 'cat_sick',     frames: f([14, 15]), frameRate: 1.5, repeat: -1 });
   }
 
   // ── OYUNCU TIKLAMASI İLE YÜRÜME ─────────────────────────────────
   walkTo(targetX, targetY, onArrive) {
-    const walkable = ['idle', 'happy', 'hungry', 'tired', 'bored'];
+    const walkable = ['idle', 'happy', 'hungry', 'tired', 'bored', 'sick'];
     if (!walkable.includes(this.state)) return;
 
     targetX = Phaser.Math.Clamp(targetX, 60, 440);
