@@ -997,17 +997,63 @@ export default class BootScene extends Phaser.Scene {
 
   // ── TETRIS BLOK ─────────────────────────────────────────────────
   _generateTetrisBlockSprite() {
+    // Eski düz blok (geriye dönük uyumluluk için)
     const gfx = this.make.graphics({ x: 0, y: 0, add: false });
     gfx.fillStyle(0xffffff, 1);
     gfx.fillRect(0, 0, 8, 8);
-    gfx.fillStyle(0xdddddd, 1);
-    gfx.fillRect(0, 0, 8, 1);          // üst kenar
-    gfx.fillRect(0, 0, 1, 8);          // sol kenar
-    gfx.fillStyle(0xaaaaaa, 1);
-    gfx.fillRect(0, 7, 8, 1);          // alt kenar
-    gfx.fillRect(7, 0, 1, 8);          // sağ kenar
     gfx.generateTexture('tetris_block', 8, 8);
     gfx.destroy();
+
+    // 7 renkli kedi yüzlü tetris blokları
+    const blockColors = [
+      { key: 'tb_red',     base: 0xe63946, light: 0xf47b82, dark: 0xa02030 },
+      { key: 'tb_blue',    base: 0x457b9d, light: 0x6fa8c8, dark: 0x2a5070 },
+      { key: 'tb_purple',  base: 0x9b59b6, light: 0xc07fd4, dark: 0x6a3a80 },
+      { key: 'tb_teal',    base: 0x2a9d8f, light: 0x50c8b8, dark: 0x1a6a60 },
+      { key: 'tb_orange',  base: 0xf4a261, light: 0xffc48a, dark: 0xb87040 },
+      { key: 'tb_yellow',  base: 0xffd166, light: 0xffe899, dark: 0xc09030 },
+      { key: 'tb_darkred', base: 0xc0392b, light: 0xe06050, dark: 0x801820 },
+    ];
+
+    blockColors.forEach(({ key, base, light, dark }) => {
+      const g = this.make.graphics({ x: 0, y: 0, add: false });
+
+      // Ana blok rengi
+      g.fillStyle(base, 1);
+      g.fillRect(0, 0, 8, 8);
+
+      // Üst-sol parlaklık (3D his)
+      g.fillStyle(light, 1);
+      g.fillRect(0, 0, 8, 1);
+      g.fillRect(0, 0, 1, 8);
+
+      // Alt-sağ gölge
+      g.fillStyle(dark, 1);
+      g.fillRect(0, 7, 8, 1);
+      g.fillRect(7, 0, 1, 8);
+
+      // Kedi yüzü (koyu pikseller — her renkte görünür)
+      const eyeColor = 0x1a1a2e;
+      const noseColor = 0xff9999;
+
+      // Gözler (2x2 hücrede 1px)
+      g.fillStyle(eyeColor, 1);
+      g.fillRect(2, 2, 1, 1); // sol göz
+      g.fillRect(5, 2, 1, 1); // sağ göz
+
+      // Burun
+      g.fillStyle(noseColor, 1);
+      g.fillRect(3, 4, 2, 1);
+
+      // Gülümseme
+      g.fillStyle(eyeColor, 1);
+      g.fillRect(2, 5, 1, 1); // sol köşe
+      g.fillRect(5, 5, 1, 1); // sağ köşe
+      g.fillRect(3, 6, 2, 1); // orta alt
+
+      g.generateTexture(key, 8, 8);
+      g.destroy();
+    });
   }
 
   // ── AKSESUARLAR (9 adet) ───────────────────────────────────────

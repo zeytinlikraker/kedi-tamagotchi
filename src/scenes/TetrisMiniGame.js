@@ -7,13 +7,13 @@ import { soundManager } from '../audio/SoundManager.js';
  */
 const COLS = 8, ROWS = 14, CELL = 22;
 const SHAPES = [
-  { cells: [[0,0],[1,0],[0,1],[1,1]], color: 0xe63946 },   // kare
-  { cells: [[0,0],[1,0],[2,0],[3,0]], color: 0x457b9d },   // I
-  { cells: [[0,0],[1,0],[2,0],[1,1]], color: 0x9b59b6 },   // T
-  { cells: [[0,0],[1,0],[1,1],[2,1]], color: 0x2a9d8f },   // S
-  { cells: [[1,0],[2,0],[0,1],[1,1]], color: 0xf4a261 },   // Z
-  { cells: [[0,0],[0,1],[1,1],[2,1]], color: 0xffd166 },   // L
-  { cells: [[2,0],[0,1],[1,1],[2,1]], color: 0xe63946 },   // J
+  { cells: [[0,0],[1,0],[0,1],[1,1]], textureKey: 'tb_red' },     // kare
+  { cells: [[0,0],[1,0],[2,0],[3,0]], textureKey: 'tb_blue' },    // I
+  { cells: [[0,0],[1,0],[2,0],[1,1]], textureKey: 'tb_purple' },  // T
+  { cells: [[0,0],[1,0],[1,1],[2,1]], textureKey: 'tb_teal' },    // S
+  { cells: [[1,0],[2,0],[0,1],[1,1]], textureKey: 'tb_orange' },  // Z
+  { cells: [[0,0],[0,1],[1,1],[2,1]], textureKey: 'tb_yellow' },  // L
+  { cells: [[2,0],[0,1],[1,1],[2,1]], textureKey: 'tb_darkred' }, // J
 ];
 
 export default class TetrisMiniGame extends Phaser.Scene {
@@ -24,7 +24,7 @@ export default class TetrisMiniGame extends Phaser.Scene {
     this._score = 0;
     this._gameOver = false;
     this._grid = [];
-    this._gridColors = [];
+    this._gridTextures = [];
     this._current = null;
     this._curX = 0;
     this._curY = 0;
@@ -71,7 +71,7 @@ export default class TetrisMiniGame extends Phaser.Scene {
     // Grid veri yapısı
     for (let r = 0; r < ROWS; r++) {
       this._grid[r] = new Array(COLS).fill(0);
-      this._gridColors[r] = new Array(COLS).fill(0);
+      this._gridTextures[r] = new Array(COLS).fill('');
     }
 
     // İlk blok
@@ -159,7 +159,7 @@ export default class TetrisMiniGame extends Phaser.Scene {
     const minY = Math.min(...rotated.map(c => c[1]));
     const normalized = rotated.map(([x, y]) => [x - minX, y - minY]);
     if (this._canPlace(normalized, this._curX, this._curY)) {
-      this._current = { cells: normalized, color: this._current.color };
+      this._current = { cells: normalized, textureKey: this._current.textureKey };
     }
   }
 
@@ -179,7 +179,7 @@ export default class TetrisMiniGame extends Phaser.Scene {
       const gy = this._curY + cy;
       if (gy >= 0 && gy < ROWS) {
         this._grid[gy][gx] = 1;
-        this._gridColors[gy][gx] = this._current.color;
+        this._gridTextures[gy][gx] = this._current.textureKey;
       }
     }
     this._clearLines();
@@ -191,9 +191,9 @@ export default class TetrisMiniGame extends Phaser.Scene {
     for (let r = ROWS - 1; r >= 0; r--) {
       if (this._grid[r].every(c => c === 1)) {
         this._grid.splice(r, 1);
-        this._gridColors.splice(r, 1);
+        this._gridTextures.splice(r, 1);
         this._grid.unshift(new Array(COLS).fill(0));
-        this._gridColors.unshift(new Array(COLS).fill(0));
+        this._gridTextures.unshift(new Array(COLS).fill(''));
         cleared++;
         r++; // tekrar kontrol
       }
@@ -218,9 +218,9 @@ export default class TetrisMiniGame extends Phaser.Scene {
         if (this._grid[r][c]) {
           const bx = this._gridX + c * CELL;
           const by = this._gridY + r * CELL;
-          const block = this.add.image(bx + CELL / 2, by + CELL / 2, 'tetris_block')
-            .setDisplaySize(CELL - 1, CELL - 1)
-            .setTint(this._gridColors[r][c]);
+          const texKey = this._gridTextures[r][c] || 'tb_red';
+          const block = this.add.image(bx + CELL / 2, by + CELL / 2, texKey)
+            .setDisplaySize(CELL - 1, CELL - 1);
           this._blockGfx.push(block);
         }
       }
@@ -234,9 +234,8 @@ export default class TetrisMiniGame extends Phaser.Scene {
         if (gy >= 0) {
           const bx = this._gridX + gx * CELL;
           const by = this._gridY + gy * CELL;
-          const block = this.add.image(bx + CELL / 2, by + CELL / 2, 'tetris_block')
-            .setDisplaySize(CELL - 1, CELL - 1)
-            .setTint(this._current.color);
+          const block = this.add.image(bx + CELL / 2, by + CELL / 2, this._current.textureKey)
+            .setDisplaySize(CELL - 1, CELL - 1);
           this._blockGfx.push(block);
         }
       }
@@ -250,9 +249,8 @@ export default class TetrisMiniGame extends Phaser.Scene {
         const block = this.add.image(
           previewX + cx * CELL,
           previewY + cy * CELL,
-          'tetris_block'
-        ).setDisplaySize(CELL - 1, CELL - 1)
-         .setTint(this._nextShape.color);
+          this._nextShape.textureKey
+        ).setDisplaySize(CELL - 1, CELL - 1);
         this._blockGfx.push(block);
       }
     }
