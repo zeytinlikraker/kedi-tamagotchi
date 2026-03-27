@@ -60,7 +60,9 @@ export default class BootScene extends Phaser.Scene {
     this._generateBirdSprites();
     this._generateFeatherSprite();
     this._generateTetrisBlockSprite();
-    this._generateAccessorySprites();`r`n    this._generateMedicineSprite();`r`n    this._generateSneezeBubbleSprite();`r`n
+    this._generateAccessorySprites();
+    this._generateMedicineSprite();
+    this._generateSneezeBubbleSprite();
     // Save kontrol — varsa direkt oyuna, yoksa giriş ekranına
     const SAVE_KEY = 'kedi_tamagotchi_save';
     const raw = localStorage.getItem(SAVE_KEY);
