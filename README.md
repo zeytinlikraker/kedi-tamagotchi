@@ -1,7 +1,7 @@
 # 🐱 Kedi Tamagotchi
 
 Browser uzerinde calisan pixel art kedi bakim oyunu!
-Phaser.js 3 ile yapilmis, tamamen programatik pixel art — harici dosya gerekmez.
+Phaser.js 3 ile yapilmis, tamamen programatik pixel art, harici dosya gerekmez.
 
 ## 🎮 Oyna
 https://zeytinlikraker.github.io/kedi-tamagotchi/
@@ -56,22 +56,22 @@ https://zeytinlikraker.github.io/kedi-tamagotchi/
 - 🚽 Kedi tuvaleti
 
 ## 🛠️ Teknoloji
-- **Phaser.js 3** — 2D oyun motoru
-- **Vanilla HTML/CSS/JS** — framework yok
-- **Web Audio API** — programatik 8-bit sesler
-- **Programatik Pixel Art** — tum gorseller kod ile uretilir, harici asset dosyasi yok
-- **LocalStorage** — oyun kayit sistemi
-- **Responsive CSS** — masaustu ve mobil destegi
+- **Phaser.js 3** 2D oyun motoru
+- **Vanilla HTML/CSS/JS** framework yok
+- **Web Audio API** programatik 8-bit sesler
+- **Programatik Pixel Art** tum gorseller kod ile uretilir, harici asset dosyasi yok
+- **LocalStorage** oyun kayit sistemi
+- **Responsive CSS** masaustu ve mobil destegi
 
 ## 🎯 Nasil Oynanir
 1. Oyunu ac, kedine isim ver ve renk sec
 2. Kedini besle, sev, banyo yap, oyun oyna!
-3. Statlari yuksel tut — kedi mutlu olsun
+3. Statlari yuksel tut, kedi mutlu olsun
 4. Mini oyunlar oynayarak eglence ve mutluluk kazan
 5. Kedini uyut, ruya oyunu oyna
 6. Aksesuarlarla kedini susle, rengini degistir
-7. Kedi buyudukce degisir — yavru, genc, yetiskin!
-8. Tuvaleti temizli tut — kirli ortamda kedi hastalanir!
+7. Kedi buyudukce degisir, yavru, genc, yetiskin!
+8. Tuvaleti temizli tut, kirli ortamda kedi hastalanir!
 9. Ziyaretci gelirse ona da merhaba de 🐱
 
 ## 📋 Lisans
